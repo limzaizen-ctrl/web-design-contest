@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asan ka na Geo?</title>
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #0f4d90;
+      --blue-light: #399cda;
+      --yellow: #e0cb33;
+      --paper: #e8eaff;
+      --ink: #0244a8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Cedarville Cursive", cursive, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.6;
+    }
+    h1, h2, h3 { font-family: "Cedarville Cursive", cursive, serif; line-height: 1.2; }
+    a { color: inherit; }
+
+    #bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--yellow);
+      z-index: 20;
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      background: var(--blue);
+      color: white;
+    }
+    .logo { font-family: "Cedarville Cursive", cursive, serif; font-size: 1.4rem; font-weight: bold; }
+    .logo span { color: var(--yellow); }
+    nav ul { display: flex; gap: 1.5rem; list-style: none; }
+    nav a { text-decoration: none; padding-bottom: 4px; border-bottom: 2px solid transparent; transition: border-color .2s; }
+    nav a:hover { border-color: var(--yellow); }
+
+    .hero {
+      position: relative;
+      min-height: 540px;
+      padding: 5rem 5%;
+      color: white;
+      background: transparent;
+      overflow: hidden;
+    }
+    .hero-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -2;
+    }
+    .hero::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: rgba(15, 77, 144, 0.72);
+      background-image:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .hero h1, .hero p, .hero .btn { position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(2.2rem, 6vw, 4rem); max-width: 14ch; }
+    .typed { color: var(--yellow); border-right: 3px solid var(--yellow); padding-right: 4px; }
+    .hero p { max-width: 48ch; margin: 1.2rem 0 2rem; color: #d5e2ee; font-size: 1.1rem; }
+    .btn {
+      display: inline-block;
+      padding: .8rem 1.6rem;
+      border-radius: 6px;
+      border: none;
+      background: var(--yellow);
+      color: var(--ink);
+      font-family: inherit;
+      font-weight: bold;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .btn:hover { transform: translateY(-3px); }
+
+    .bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .bubbles span {
+      position: absolute;
+      bottom: -40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, .5);
+      background: rgba(255, 255, 255, .12);
+      will-change: transform;
+      animation: rise 10s linear infinite;
+    }
+    @keyframes rise {
+      0% { transform: translateY(0); opacity: 0; }
+      10% { opacity: .8; }
+      100% { transform: translateY(-1100px); opacity: 0; }
+    }
+
+    .note-paper {
+      position: relative;
+      max-width: 360px;
+      margin-top: 2.2rem;
+      padding: 1.4rem 1.4rem 1.2rem 2.3rem;
+      background-color: #fffbe6;
+      background-image:
+        linear-gradient(90deg, transparent 24px, #f28b82 24px, #f28b82 26px, transparent 26px),
+        repeating-linear-gradient(transparent, transparent 25px, #cbd5e1 26px);
+      color: #1e293b;
+      font-family: "Cedarville Cursive", cursive, serif;
+      font-size: 1.05rem;
+      line-height: 26px;
+      border-radius: 2px 2px 14px 2px;
+      box-shadow: 4px 6px 15px rgba(0, 0, 0, 0.25);
+      transform: rotate(-1.5deg);
+      transition: transform 0.2s ease;
+    }
+    .note-paper:hover { transform: rotate(0deg) scale(1.02); }
+    .note-paper::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ff6b6b, #b91c1c);
+      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.35);
+    }
+    .note-paper span {
+      display: block;
+      margin-top: 0.4rem;
+      font-style: normal;
+      font-family: "Cedarville Cursive", cursive, sans-serif;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--blue);
+    }
+
+    .note-wall {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem 1.4rem;
+      margin-top: 2.4rem;
+      max-width: 100%;
+      scroll-margin-top: 110px;
+    }
+    @media (min-width: 901px) {
+      .note-wall { max-width: max(260px, calc(90vw - 440px)); }
+    }
+    .note-paper.guest {
+      --tilt: 0deg;
+      --note-bg: #fffbe6;
+      width: 230px;
+      margin-top: 0;
+      font-size: .95rem;
+      overflow-wrap: anywhere;
+      background-color: var(--note-bg);
+      transform: rotate(var(--tilt));
+    }
+    .note-paper.guest:hover { transform: rotate(0deg) scale(1.05); }
+    .note-paper.guest.pop { animation: pop .7s cubic-bezier(.3, 1.3, .5, 1) backwards; }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(.2) translateY(60px) rotate(-20deg); }
+      to { opacity: 1; transform: scale(1) rotate(var(--tilt)); }
+    }
+
+    #fish {
+      position: absolute;
+      right: 6%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 400px;
+      height: 400px;
+      cursor: grab;
+      z-index: 1;
+      touch-action: pan-y;
+      transition: top .6s ease;
+    }
+    #fish:active { cursor: grabbing; }
+    #fish canvas { display: block; width: 100% !important; height: 100% !important; }
+    #fish-hint {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: .8rem;
+      color: #d5e2ee;
+      opacity: .7;
+      pointer-events: none;
+    }
+    #geo-tip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: .35rem .8rem;
+      background: #fffbe6;
+      color: var(--ink);
+      font-weight: bold;
+      font-size: .95rem;
+      border-radius: 10px 10px 10px 2px;
+      box-shadow: 2px 4px 10px rgba(0, 0, 0, .3);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 2;
+    }
+    #geo-tip.show { opacity: 1; }
+    @media (max-width: 900px) {
+      #fish { position: relative; right: auto; top: auto; transform: none; margin: 2rem auto 0; max-width: 100%; }
+    }
+
+    section, footer {
+      position: relative;
+      z-index: 1;
+    }
+    section { padding: 4rem 5%; }
+    section h2 { font-size: 2rem; margin-bottom: 1.5rem; }
+    #about, #contact { background: var(--paper); }
+
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    .about { display: flex; gap: 3rem; flex-wrap: wrap; align-items: center; }
+    .about h3 { flex: 1 1 320px; max-width: 60ch; font-weight: normal; }
+    .stats { flex: 1 1 260px; display: flex; gap: 1rem; }
+    .stat { position: relative; flex: 1; padding: 1.2rem; text-align: center; background: var(--blue); color: white; border-radius: 4px 16px 4px 16px; }
+    .stat b { display: block; font-family: "Cedarville Cursive", cursive, serif; font-size: 2rem; color: var(--yellow); }
+
+    .member { cursor: pointer; outline: none; }
+    .ping { position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--yellow); }
+    .popup {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 16px);
+      width: max-content;
+      max-width: min(240px, 80vw);
+      padding: .8rem 1rem;
+      background: var(--yellow);
+      color: var(--ink);
+      font-weight: bold;
+      font-size: 1rem;
+      line-height: 1.4;
+      border-radius: 12px 12px 12px 3px;
+      box-shadow: 4px 6px 15px rgba(0, 0, 0, .25);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 5;
+      transform-origin: bottom center;
+      transform: translate(-50%, 14px) scale(.6) rotate(-4deg);
+      transition: opacity .25s ease, transform .4s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    .popup::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -8px;
+      border: 8px solid transparent;
+      border-top-color: var(--yellow);
+    }
+    .member:hover .popup, .member:focus .popup {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1) rotate(-1.5deg);
+    }
+
+    .programs { background: white; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.5rem; }
+    .card { padding: 1.6rem; border: 2px solid var(--blue); border-radius: 10px; transition: background .2s, color .2s; }
+    .card.reveal { transition: opacity .6s ease, transform .6s ease, background .2s, color .2s; }
+    .card:hover { background: var(--blue); color: white; }
+    .card .icon { display: inline-block; font-size: 2rem; }
+    .card:hover .icon { animation: wiggle .5s ease; }
+    @keyframes wiggle {
+      50% { transform: rotate(14deg) scale(1.15); }
+    }
+    .card h3 { margin: .5rem 0; }
+
+    form { display: grid; gap: 1rem; max-width: 460px; }
+    input, textarea { padding: .8rem; border: 2px solid #c9d3dd; border-radius: 6px; font: inherit; }
+    input:focus, textarea:focus { outline: none; border-color: var(--blue-light); }
+    #msg { margin-top: 1rem; font-weight: bold; color: #1f7a4d; }
+    #msg a { color: var(--blue); }
+    .wall-status { margin-top: 1rem; font-size: .95rem; }
+    .pins span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 50%;
+      border: 2px solid var(--blue);
+      vertical-align: middle;
+    }
+    .pins span.on { background: var(--yellow); }
+
+    footer { text-align: center; padding: 1.5rem; background: var(--blue); color: #d5e2ee; }
+
+    @media (max-width: 600px) {
+      nav { flex-direction: column; gap: .6rem; }
+      .stats { flex-direction: column; }
+      #fish { width: 300px; height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bar"></div>
+
+  <nav>
+    <div class="logo">Asan ka na <span>Geo?</span></div>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#programs">Programs</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <header class="hero">
+    <video class="hero-video" autoplay muted loop playsinline>
+      <source src="11402819-uhd_3840_2160_30fps.mp4" type="video/mp4">
+    </video>
+
+    <div class="bubbles" id="bubbles"></div>
+
+    <h1>We can save <span class="typed" id="typed"></span></h1>
+    <p>A website about encouraging awareness with the current predicament of climate change.</p>
+    <a href="#contact" class="btn">Join the club</a>
+
+    <div class="note-paper">
+      "Every river restored, every reef protected, and every voice raised brings our islands closer to a thriving tomorrow."
+      <span>— Note from Team Geo? 🌱</span>
+    </div>
+
+    <div class="note-wall" id="noteWall"></div>
+
+    <div id="fish">
+      <div id="geo-tip">hi, ako si geo!</div>
+      <div id="fish-hint">Drag to spin the fish 🐟</div>
+    </div>
+  </header>
+
+  <section id="about">
+    <h2>Who we are</h2>
+    <div class="about">
+      <h3>People in our nation supporting our geodiversity &amp; hydrodiversity.</h3>
+      <div class="stats">
+        <div class="stat member" tabindex="0">
+          <span class="ping"></span>
+          <b>1</b>member
+          <div class="popup">website designer: kent lim - bsit 1-2</div>
+        </div>
+        <div class="stat"><b>12</b>projects</div>
+        <div class="stat"><b>3</b>contests</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="programs" class="programs">
+    <h2>What do we offer?</h2>
+    <div class="cards">
+      <div class="card"><div class="icon">📢</div><h3>Provide Awareness</h3><p>Our voices shall not be in vain.</p></div>
+      <div class="card"><div class="icon">🗳️</div><h3>Conduct Surveys</h3><p>You are heard.</p></div>
+      <div class="card"><div class="icon">💖</div><h3>Donations are heartwarmingly welcome!</h3><p>You can help.</p></div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Say hi to the world</h2>
+    <p class="lead">Your message has a chance to be included in the note!</p>
+    <p class="lead">pwede nyu po i-tryyy 💖</p>
+    <form id="form">
+      <input type="text" id="fName" placeholder="Your name" maxlength="20" required>
+      <input type="email" placeholder="Your email" required>
+      <textarea id="fMsg" rows="4" placeholder="Your message (up to 100 characters)" maxlength="100" required></textarea>
+      <button class="btn" type="submit">Send</button>
+    </form>
+    <p id="msg"></p>
+    <p class="wall-status">
+      <span class="pins" id="pins"><span></span><span></span><span></span><span></span><span></span></span>
+      <span id="pinText">0 / 5 notes pinned in the hero</span>
+    </p>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Asan ka na Geo? All rights reserved.</p>
+  </footer>
+
+  <script>
+    const words = ["Aquatic Life", "Land Life", "Human Life", "Because all lives are significant"];
+    let w = 0, c = 0, deleting = false;
+    const el = document.getElementById("typed");
+    function type() {
+      if (!el) return;
+      const word = words[w];
+      el.textContent = word.slice(0, c);
+      if (!deleting && c < word.length) c++;
+      else if (!deleting) { deleting = true; setTimeout(type, 1200); return; }
+      else if (c > 0) c--;
+      else { deleting = false; w = (w + 1) % words.length; }
+      setTimeout(type, deleting ? 60 : 110);
+    }
+    type();
+
+    const bubbleBox = document.getElementById("bubbles");
+    for (let i = 0; i < 8; i++) {
+      const b = document.createElement("span");
+      const size = 8 + Math.random() * 20;
+      b.style.width = size + "px";
+      b.style.height = size + "px";
+      b.style.left = Math.random() * 100 + "%";
+      b.style.animationDuration = 8 + Math.random() * 8 + "s";
+      b.style.animationDelay = -Math.random() * 10 + "s";
+      bubbleBox.appendChild(b);
+    }
+
+    const bar = document.getElementById("bar");
+    window.addEventListener("scroll", () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.transform = "scaleX(" + window.scrollY / max + ")";
+    });
+
+    const items = document.querySelectorAll("#about h2, .about h3, .stat, .programs h2, .card, #contact h2, #contact .lead, form");
+    items.forEach((item) => item.classList.add("reveal"));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    items.forEach((item) => io.observe(item));
+
+    const colors = ["#fffbe6", "#e3f4ff", "#ffe8ef", "#e6ffe9", "#f0e8ff"];
+    const wall = document.getElementById("noteWall");
+    const pins = document.querySelectorAll("#pins span");
+    const pinText = document.getElementById("pinText");
+    const msg = document.getElementById("msg");
+    const form = document.getElementById("form");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("fName").value.trim();
+      const text = document.getElementById("fMsg").value.trim();
+      if (wall.children.length >= 5) {
+        msg.textContent = "Thanks! Your message was sent. (The note wall is full: 5 / 5)";
+      } else {
+        const note = document.createElement("div");
+        note.className = "note-paper guest pop";
+        note.style.setProperty("--tilt", (Math.random() * 6 - 3) + "deg");
+        note.style.setProperty("--note-bg", colors[wall.children.length]);
+        note.textContent = '"' + text + '"';
+        const who = document.createElement("span");
+        who.textContent = "— " + name + " 🌱";
+        note.appendChild(who);
+        wall.appendChild(note);
+        pins[wall.children.length - 1].classList.add("on");
+        pinText.textContent = wall.children.length + " / 5 notes pinned in the hero";
+        msg.innerHTML = 'Thanks! Your message was sent. Your note is pinned in the hero. <a href="#noteWall">See it ↑</a>';
+        msg.querySelector("a").onclick = () => {
+          setTimeout(() => {
+            note.classList.remove("pop");
+            void note.offsetWidth;
+            note.classList.add("pop");
+          }, 1000);
+        };
+      }
+      form.reset();
+    });
+
+    const box = document.getElementById("fish");
+    const canvas = document.createElement("canvas");
+    canvas.width = 400;
+    canvas.height = 400;
+    box.insertBefore(canvas, box.firstChild);
+    const ctx = canvas.getContext("2d");
+    let angle = 0;
+    let dragging = false;
+    let lastX = 0;
+    let t = 0;
+    let wagTime = 0;
+
+    function drawFish() {
+      requestAnimationFrame(drawFish);
+      if (box.getBoundingClientRect().bottom < 0) return;
+      t += 0.04;
+      wagTime += dragging ? 0.4 : 0.15;
+      if (!dragging) {
+        angle = Math.atan2(Math.sin(angle), Math.cos(angle));
+        angle = angle * 0.95;
+      }
+      const wag = Math.sin(wagTime) * 20;
+
+      ctx.clearRect(0, 0, 400, 400);
+
+     
+      const bob = Math.sin(t * 2);
+
+      ctx.save();
+      ctx.translate(200, 200 + bob * 8);
+      ctx.scale(Math.cos(angle), 1);
+      ctx.shadowColor = "rgba(0, 20, 60, 0.45)";
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetX = 6;
+      ctx.shadowOffsetY = 10;
+
+      ctx.fillStyle = "#ff6b2b";
+      ctx.beginPath();
+      ctx.moveTo(75, 0);
+      ctx.lineTo(155, -60 + wag);
+      ctx.lineTo(155, 60 + wag);
+      ctx.fill();
+
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.moveTo(-65, -60);
+      ctx.lineTo(-15, -110);
+      ctx.lineTo(35, -58);
+      ctx.fill();
+
+      ctx.fillStyle = "#ff6b2b";
+      ctx.beginPath();
+      ctx.ellipse(-25, 0, 130, 72, 0, 0, Math.PI * 2);
+      ctx.fill();
+     
+      ctx.shadowColor = "transparent";
+
+      const shade = ctx.createLinearGradient(0, -72, 0, 72);
+      shade.addColorStop(0, "rgba(255, 255, 255, 0.22)");
+      shade.addColorStop(0.5, "rgba(255, 255, 255, 0)");
+      shade.addColorStop(1, "rgba(120, 30, 0, 0.3)");
+      ctx.fillStyle = shade;
+      ctx.beginPath();
+      ctx.ellipse(-25, 0, 130, 72, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.ellipse(-55, 0, 20, 66, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#111";
+      ctx.beginPath();
+      ctx.arc(-110, -15, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(-113, -18, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+    drawFish();
+
+    box.onpointerdown = (e) => {
+      dragging = true;
+      lastX = e.clientX;
+    };
+    const tip = document.getElementById("geo-tip");
+    box.onpointermove = (e) => {
+      if (dragging) {
+        angle += (e.clientX - lastX) * 0.02;
+        lastX = e.clientX;
+      }
+    
+      const r = box.getBoundingClientRect();
+      const px = (e.clientX - r.left) * (400 / r.width) - 200;
+      const py = (e.clientY - r.top) * (400 / r.height) - (200 + Math.sin(t * 2) * 8);
+      const sx = Math.max(Math.abs(Math.cos(angle)), 0.25);
+      const nx = (px / sx + 25) / 130;
+      const ny = py / 72;
+      const onFish = nx * nx + ny * ny <= 1 || (px / sx > 75 && px / sx < 155 && Math.abs(py) < 60);
+      tip.classList.toggle("show", onFish);
+      if (onFish) {
+        tip.style.left = (e.clientX - r.left + 14) + "px";
+        tip.style.top = (e.clientY - r.top - 36) + "px";
+      }
+    };
+    box.onpointerleave = () => tip.classList.remove("show");
+    window.onpointerup = () => { dragging = false; };
+    window.onpointercancel = () => { dragging = false; };
+  </script>
+</body>
+</html>
